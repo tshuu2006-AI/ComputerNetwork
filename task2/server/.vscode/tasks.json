@@ -1,0 +1,55 @@
+{
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "Build WebSocket Server",
+            "command": "C:/msys64/ucrt64/bin/g++.exe",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+
+                // (Trỏ vào thư mục con /opencv4 mà pacman đã tạo)
+                "-IC:/msys64/ucrt64/include/opencv4",
+                
+                // --- DANH SÁCH FILE NGUỒN ---
+                "${fileDirname}\\main.cpp",
+                "${fileDirname}\\websocket_server.cpp",
+                "${fileDirname}\\screenshot.cpp",
+                "${fileDirname}\\camera_recorder.cpp",
+                
+                // --- OUTPUT ---
+                "-o",
+                "${fileDirname}\\server.exe",
+                
+                // --- THƯ VIỆN CŨ (CHECKPOINT 1) ---
+                "-lws2_32", 
+                "-lgdiplus", 
+                "-lgdi32",
+                "-lbcrypt",
+                "-luser32",
+
+                // --- THƯ VIỆN MỚI (OPENCV) ---
+                "-lopencv_core",
+                "-lopencv_videoio",
+                "-lopencv_highgui",
+                "-lopencv_imgcodecs",
+                "-lopencv_imgproc"
+            ],
+            "options": {
+                "cwd": "${fileDirname}",
+                "env": {
+                    "PATH": "C:/msys64/ucrt64/bin;C:\\Windows\\System32;%PATH%" 
+                }
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Builds the main WebSocket server executable."
+        }
+    ],
+    "version": "2.0.0"
+}
