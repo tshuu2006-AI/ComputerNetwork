@@ -15,8 +15,28 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Host.cpp">
+    <ClCompile Include="Server.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="WebSocketServer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Stream.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Server.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WebSocketServer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Stream.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

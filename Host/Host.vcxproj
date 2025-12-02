@@ -19,7 +19,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Host.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Server.cpp" />
+    <ClCompile Include="Stream.cpp" />
+    <ClCompile Include="WebSocketServer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Server.h" />
+    <ClInclude Include="Stream.h" />
+    <ClInclude Include="WebSocketServer.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -108,11 +116,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)Shared</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Shared; D:\OpenCV\opencv\build\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>D:\OpenCV\opencv\build\x64\vc16\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opencv_world4120d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -127,6 +137,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>opencv_world4120.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
