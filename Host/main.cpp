@@ -21,7 +21,7 @@ int main() {
 
     std::cout << "🚀 Server dang khoi dong tai ws://127.0.0.1:8080" << std::endl;
 
-    WebSocketServer server("127.0.0.1", 8080);
+    WebSocketServer server("0.0.0.0", 8080);
 
     server.start();
 

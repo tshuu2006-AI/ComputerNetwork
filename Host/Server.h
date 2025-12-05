@@ -2,6 +2,4 @@
 class Server {
 public:
 	void ServiceDiscovery();
-
-
 };

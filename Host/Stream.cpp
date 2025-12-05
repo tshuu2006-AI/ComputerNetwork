@@ -1,149 +1,229 @@
 ﻿#include "Stream.h"
 #include <vector>
 #include <windows.h>
-#include <gdiplus.h> // Đã được khởi động ở main.cpp
-#include <opencv2/videoio.hpp>  // Cần cho VideoCapture, VideoWriter
-#include <opencv2/imgproc.hpp>  // Cần cho cv::Mat
-#include <opencv2/highgui.hpp>  // Cần cho fourcc
+#include <d3d11.h>        // Thư viện DirectX 11
+#include <dxgi1_2.h>      // Thư viện DXGI 1.2
+#include <wrl/client.h>   // Smart Pointer (ComPtr)
+#include <opencv2/opencv.hpp> // Bao gồm toàn bộ OpenCV cần thiết
 #include <iostream>
-#include <chrono>   // Cần cho thời gian
-#include <thread>   // Cần cho sleep
+#include <chrono>
+#include <thread>
 
-#pragma comment(lib, "gdiplus.lib") 
+// Link thư viện DirectX
+#pragma comment(lib, "d3d11.lib")
+#pragma comment(lib, "dxgi.lib")
 
-using namespace Gdiplus;
+using Microsoft::WRL::ComPtr;
 
-// Hàm tìm CLSID cho encoder (ví dụ: "image/jpeg")
-int GetEncoderClsid(const WCHAR* format, CLSID* pClsid) {
-    UINT num = 0, size = 0;
-    GetImageEncodersSize(&num, &size);
-    if (size == 0) return -1;
-    ImageCodecInfo* pImageCodecInfo = (ImageCodecInfo*)(malloc(size));
-    if (pImageCodecInfo == NULL) return -1;
-    GetImageEncoders(num, size, pImageCodecInfo);
-    for (UINT j = 0; j < num; ++j) {
-        if (wcscmp(pImageCodecInfo[j].MimeType, format) == 0) {
-            *pClsid = pImageCodecInfo[j].Clsid;
-            free(pImageCodecInfo);
-            return j;
-        }
+// ==========================================
+// CLASS XỬ LÝ DXGI (GPU CAPTURE)
+// ==========================================
+class DXGICapturer {
+private:
+    ComPtr<ID3D11Device> m_device;
+    ComPtr<ID3D11DeviceContext> m_context;
+    ComPtr<IDXGIOutputDuplication> m_duplication;
+    ComPtr<ID3D11Texture2D> m_stagingTexture; // Texture nằm ở RAM để CPU đọc được
+    DXGI_OUTPUT_DESC m_outputDesc;
+    bool m_initialized = false;
+    int m_width = 0;
+    int m_height = 0;
+
+public:
+    DXGICapturer() {}
+    ~DXGICapturer() { Release(); }
+
+    void Release() {
+        m_stagingTexture.Reset();
+        m_duplication.Reset();
+        m_context.Reset();
+        m_device.Reset();
+        m_initialized = false;
     }
-    free(pImageCodecInfo);
-    return -1;
-}
 
+    // Khởi tạo DirectX Device và Output Duplication
+    bool Initialize() {
+        if (m_initialized) return true;
+
+        HRESULT hr;
+
+        // 1. Tạo D3D11 Device
+        D3D_FEATURE_LEVEL featureLevel;
+        hr = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, nullptr, 0, D3D11_SDK_VERSION, &m_device, &featureLevel, &m_context);
+        if (FAILED(hr)) { std::cerr << "Loi tao D3D11 Device" << std::endl; return false; }
+
+        // 2. Lấy DXGI Device -> Adapter -> Output
+        ComPtr<IDXGIDevice> dxgiDevice;
+        m_device.As(&dxgiDevice);
+        ComPtr<IDXGIAdapter> dxgiAdapter;
+        dxgiDevice->GetAdapter(&dxgiAdapter);
+        ComPtr<IDXGIOutput> dxgiOutput;
+        // Lấy màn hình chính (Index 0). Nếu muốn màn phụ thì đổi số 0 thành 1
+        dxgiAdapter->EnumOutputs(0, &dxgiOutput);
+
+        if (!dxgiOutput) { std::cerr << "Khong tim thay man hinh!" << std::endl; return false; }
+
+        dxgiOutput->GetDesc(&m_outputDesc);
+        m_width = m_outputDesc.DesktopCoordinates.right - m_outputDesc.DesktopCoordinates.left;
+        m_height = m_outputDesc.DesktopCoordinates.bottom - m_outputDesc.DesktopCoordinates.top;
+
+        // 3. Tạo Output Duplication
+        ComPtr<IDXGIOutput1> dxgiOutput1;
+        dxgiOutput.As(&dxgiOutput1);
+        hr = dxgiOutput1->DuplicateOutput(m_device.Get(), &m_duplication);
+
+        if (FAILED(hr)) {
+            std::cerr << "Loi DuplicateOutput (Co the do chua cai Driver VGA hoac dang chay Fullscreen game doc quyen)" << std::endl;
+            return false;
+        }
+
+        m_initialized = true;
+        return true;
+    }
+
+    // Hàm chụp màn hình trả về cv::Mat (BGRA)
+    bool CaptureFrame(cv::Mat& outputFrame) {
+        if (!m_initialized) {
+            if (!Initialize()) return false;
+        }
+
+        HRESULT hr;
+        DXGI_OUTDUPL_FRAME_INFO frameInfo;
+        ComPtr<IDXGIResource> desktopResource;
+
+        // 1. Lấy khung hình mới nhất (Timeout 100ms)
+        // Lưu ý: Nếu màn hình KHÔNG CÓ GÌ THAY ĐỔI, hàm này sẽ chờ hết timeout rồi báo lỗi DXGI_ERROR_WAIT_TIMEOUT.
+        // Điều này tốt để tiết kiệm CPU, nhưng cần xử lý logic nếu muốn stream liên tục.
+        hr = m_duplication->AcquireNextFrame(100, &frameInfo, &desktopResource);
+
+        if (hr == DXGI_ERROR_WAIT_TIMEOUT) {
+            // Không có khung hình mới -> Trả về false hoặc giữ nguyên ảnh cũ
+            return false;
+        }
+        if (FAILED(hr)) {
+            // Có thể bị mất thiết bị (đổi độ phân giải, UAC...), cần Init lại
+            Release();
+            return false;
+        }
+
+        // 2. Lấy Texture từ GPU
+        ComPtr<ID3D11Texture2D> gpuTexture;
+        desktopResource.As(&gpuTexture);
+
+        // 3. Tạo Staging Texture (nếu chưa có hoặc kích thước đổi)
+        D3D11_TEXTURE2D_DESC desc;
+        gpuTexture->GetDesc(&desc);
+
+        if (!m_stagingTexture || desc.Width != m_width || desc.Height != m_height) {
+            desc.Usage = D3D11_USAGE_STAGING;
+            desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+            desc.BindFlags = 0;
+            desc.MiscFlags = 0;
+            m_device->CreateTexture2D(&desc, nullptr, &m_stagingTexture);
+            m_width = desc.Width;
+            m_height = desc.Height;
+        }
+
+        // 4. Copy từ GPU Texture sang RAM Texture
+        m_context->CopyResource(m_stagingTexture.Get(), gpuTexture.Get());
+
+        // 5. Giải phóng frame trên GPU để Windows tiếp tục vẽ frame mới
+        m_duplication->ReleaseFrame();
+
+        // 6. Map texture để đọc dữ liệu raw
+        D3D11_MAPPED_SUBRESOURCE mappedResource;
+        hr = m_context->Map(m_stagingTexture.Get(), 0, D3D11_MAP_READ, 0, &mappedResource);
+        if (SUCCEEDED(hr)) {
+            // Tạo cv::Mat từ dữ liệu raw
+            // Format của DXGI thường là BGRA (tương thích tốt với OpenCV)
+            if (outputFrame.empty() || outputFrame.size() != cv::Size(m_width, m_height)) {
+                outputFrame.create(m_height, m_width, CV_8UC4);
+            }
+
+            // Copy từng dòng vì Pitch (độ rộng dòng trong bộ nhớ) có thể khác độ rộng ảnh thực tế
+            uchar* dest = outputFrame.data;
+            uchar* src = static_cast<uchar*>(mappedResource.pData);
+            for (int h = 0; h < m_height; ++h) {
+                memcpy(dest, src, m_width * 4); // 4 bytes per pixel (BGRA)
+                dest += m_width * 4;
+                src += mappedResource.RowPitch;
+            }
+
+            m_context->Unmap(m_stagingTexture.Get(), 0);
+            return true;
+        }
+
+        return false;
+    }
+};
+
+
+// ==========================================
+// HÀM CAPTURE SCREEN (Thay thế hàm cũ)
+// ==========================================
 void capture_screen(const std::string& filename) {
-    // Không cần GdiplusStartup/Shutdown ở đây nữa (đã chuyển ra main.cpp)
+    // Dùng static để giữ kết nối DXGI qua các lần gọi hàm (tránh khởi tạo lại gây lag)
+    static DXGICapturer capturer;
 
-    // Sử dụng "Virtual Screen" để lấy TẤT CẢ các màn hình
-    int x = GetSystemMetrics(SM_XVIRTUALSCREEN);
-    int y = GetSystemMetrics(SM_YVIRTUALSCREEN);
-    int width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-    int height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+    cv::Mat frame;
 
-    HDC hScreen = GetDC(NULL);
-    HDC hDC = CreateCompatibleDC(hScreen);
-    HBITMAP hBitmap = CreateCompatibleBitmap(hScreen, width, height);
-    SelectObject(hDC, hBitmap);
+    // Thử chụp màn hình
+    // Vòng lặp nhỏ để đảm bảo lấy được hình nếu lần đầu bị timeout
+    for (int i = 0; i < 5; i++) {
+        if (capturer.CaptureFrame(frame)) break;
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
 
-    // Copy từ (x, y) của màn hình ảo vào (0, 0) của bitmap
-    BitBlt(hDC, 0, 0, width, height, hScreen, x, y, SRCCOPY);
-
-    // Chuyển HBITMAP sang Gdiplus::Bitmap
-    Bitmap bmp(hBitmap, NULL);
-    CLSID clsid;
-    GetEncoderClsid(L"image/jpeg", &clsid);
-
-    std::wstring wname(filename.begin(), filename.end());
-    bmp.Save(wname.c_str(), &clsid, NULL); // Lưu file
-
-    // Dọn dẹp tài nguyên GDI
-    DeleteObject(hBitmap);
-    DeleteDC(hDC);
-    ReleaseDC(NULL, hScreen);
+    if (!frame.empty()) {
+        // Lưu ảnh bằng OpenCV (ngắn gọn hơn GDI+ rất nhiều)
+        // DXGI trả về BGRA, OpenCV lưu tốt nhất là BGR hoặc BGRA
+        cv::imwrite(filename, frame);
+        // std::cout << "Saved: " << filename << std::endl;
+    }
+    else {
+        std::cerr << "Loi: Khong chup duoc man hinh qua DXGI" << std::endl;
+    }
 }
 
 
-#include <opencv2/videoio.hpp>  // Cần cho VideoCapture, VideoWriter
-#include <opencv2/imgproc.hpp>  // Cần cho cv::Mat
-#include <opencv2/highgui.hpp>  // Cần cho fourcc
-#include <iostream>
-#include <chrono>   // Cần cho thời gian
-#include <thread>   // Cần cho sleep
-
+// ==========================================
+// PHẦN RECORD WEBCAM (GIỮ NGUYÊN)
+// ==========================================
+// Code record_webcam của bạn bên dưới vẫn dùng tốt, không cần sửa gì cả.
 bool record_webcam(const std::string& output_filename, int duration_seconds) {
-    // 1. Mở webcam mặc định (thiết bị 0)
     cv::VideoCapture cap(0, cv::CAP_DSHOW);
     if (!cap.isOpened()) {
         std::cerr << "LOI: Khong the mo webcam mac dinh." << std::endl;
         return false;
     }
 
-    // 2. Lấy thông số của webcam
     int frame_width = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH));
     int frame_height = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
-
-    // Đặt FPS cố định là 30.0
     double fps = 30.0;
-    // -------------------------
-
-    // Tính toán thời gian nghỉ giữa mỗi frame (ms) để đạt đúng FPS này
-    // 1000ms / 30fps = ~33ms
     int delay_ms = static_cast<int>(1000 / fps);
 
-    cv::Size frame_size(frame_width, frame_height);
-
-    // 3. Tạo đối tượng VideoWriter
-    //    Sử dụng codec VP80 cho file .webm
     cv::VideoWriter writer(
         output_filename,
         cv::VideoWriter::fourcc('V', 'P', '8', '0'),
-        fps, // Báo cho file video là 30 FPS
-        frame_size
+        fps,
+        cv::Size(frame_width, frame_height)
     );
 
     if (!writer.isOpened()) {
-        std::cerr << "LOI: Khong the tao file video output (kiem tra duoi file .webm)." << std::endl;
-        cap.release();
+        std::cerr << "LOI: Khong the tao file video output." << std::endl;
         return false;
     }
 
-    std::cout << "   ...Dang ghi webcam (FPS: " << fps << ", Thoi luong: " << duration_seconds << "s)..." << std::endl;
-
-    // 4. Vòng lặp ghi hình (CÓ GIỮ NHỊP)
-    //    Tự động tính 10 * 30 = 300 frames
     int num_frames = static_cast<int>(duration_seconds * fps);
-
     for (int i = 0; i < num_frames; ++i) {
-        // Ghi lại thời điểm bắt đầu xử lý khung hình
         auto start_time = std::chrono::steady_clock::now();
-
         cv::Mat frame;
-        cap >> frame; // Lấy 1 khung hình từ webcam
-
-        if (frame.empty()) {
-            std::cerr << "   ...LOI: Khung hinh trong tu webcam." << std::endl;
-            continue;
-        }
-
-        writer.write(frame); // Ghi (nén) khung hình vào file
-
-        // Tính toán thời gian đã trôi qua cho việc đọc và ghi
-        auto end_time = std::chrono::steady_clock::now();
-        auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-
-        // Tính thời gian cần ngủ bù để giữ đúng nhịp 33ms
+        cap >> frame;
+        if (frame.empty()) continue;
+        writer.write(frame);
+        auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time).count();
         int sleep_time = delay_ms - static_cast<int>(elapsed_ms);
-
-        if (sleep_time > 0) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
-        }
+        if (sleep_time > 0) std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
     }
-
-    std::cout << "   ...Ghi webcam hoan tat." << std::endl;
-
-    // 5. Dọn dẹp
-    cap.release();
-    writer.release();
     return true;
 }

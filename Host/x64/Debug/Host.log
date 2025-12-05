@@ -1,3 +1,2 @@
-﻿  main.cpp
-D:\PROJECT\C++\Projects\ComputerNetwork\Host\main.cpp(22,18): warning C4566: character represented by universal-character-name '\U0001F680' cannot be represented in the current code page (1252)
+﻿  Stream.cpp
   Host.vcxproj -> D:\PROJECT\C++\Projects\ComputerNetwork\x64\Debug\Host.exe

@@ -1,6 +1,1 @@
-﻿  Client.cpp
-D:\PROJECT\C++\Projects\ComputerNetwork\Controller\Client.cpp(147,43): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-D:\PROJECT\C++\Projects\ComputerNetwork\Controller\Client.cpp(192,43): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-D:\PROJECT\C++\Projects\ComputerNetwork\Controller\Client.cpp(218,51): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-D:\PROJECT\C++\Projects\ComputerNetwork\Controller\Client.cpp(251,71): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-  Controller.vcxproj -> D:\PROJECT\C++\Projects\ComputerNetwork\x64\Debug\Controller.exe
+﻿  Controller.vcxproj -> D:\PROJECT\C++\Projects\ComputerNetwork\x64\Debug\Controller.exe

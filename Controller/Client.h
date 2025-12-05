@@ -1,6 +1,7 @@
 #pragma once
+#include <string>
 class Client {
 public:
-	void ServiceDiscovery();
+	std::string ServiceDiscovery();
 };
 
