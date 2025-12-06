@@ -49,7 +49,11 @@ void Server::ServiceDiscovery() {
     // 5. Yêu cầu hệ điều hành tham gia nhóm Multicast
     ip_mreq mreq;
     mreq.imr_multiaddr.s_addr = inet_addr(MULTICAST_IP); // Địa chỉ nhóm
-    mreq.imr_interface.s_addr = INADDR_ANY;             // Giao diện mạng
+    mreq.imr_interface.s_addr = htonl(INADDR_ANY);             // Giao diện mạng
+
+    in_addr localInterface;
+    localInterface.s_addr = htonl(INADDR_ANY);
+    setsockopt(sock, IPPROTO_IP, IP_MULTICAST_IF, (char*)&localInterface, sizeof(localInterface));
 
     if (setsockopt(sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char*)&mreq, sizeof(mreq)) == SOCKET_ERROR) {
         std::cerr << "setsockopt IP_ADD_MEMBERSHIP failed: " << WSAGetLastError() << "\n";
@@ -59,6 +63,7 @@ void Server::ServiceDiscovery() {
     }
     std::cout << "Host: Da tham gia nhom multicast " << MULTICAST_IP << "\n";
 
+ 
     // 6. Vòng lặp chính: Nhận và Phản hồi
     char recvBuf[2048];
     sockaddr_in controllerAddr; // Địa chỉ của Controller gửi tin

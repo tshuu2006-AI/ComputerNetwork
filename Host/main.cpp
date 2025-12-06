@@ -1,32 +1,44 @@
 ﻿#include "WebSocketServer.h"
+#include "Server.h" // <--- 1. NHỚ INCLUDE FILE CHỨA ServiceDiscovery
 #include <iostream>
-#include <gdiplus.h> // Cần cho GDI+
-#include <windows.h> // <-- THÊM VÀO cho SetProcessDPIAware
-#include <thread>
+#include <gdiplus.h>
+#include <windows.h>
+#include <thread> // <--- 2. Cần thư viện thread
 
 #pragma comment(lib, "gdiplus.lib") 
-#pragma comment(lib, "user32.lib") // <-- THÊM VÀO cho SetProcessDPIAware
+#pragma comment(lib, "user32.lib")
 
 int main() {
-    // --- BÁO CHO WINDOWS BIẾT APP NÀY "NHẬN THỨC DPI" ---
-    // (Sửa lỗi chụp màn hình bị "cụt" trên màn hình có scale)
+    // --- Setup màn hình ---
     SetProcessDPIAware();
-    // ----------------------------------------------------
 
-    // --- Khởi động GDI+ MỘT LẦN DUY NHẤT ---
+    // --- Setup GDI+ ---
     Gdiplus::GdiplusStartupInput gdiplusStartupInput;
     ULONG_PTR gdiplusToken;
     Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
-    // ------------------------------------
 
-    std::cout << "🚀 Server dang khoi dong tai ws://127.0.0.1:8080" << std::endl;
+    // =================================================================
+    // BƯỚC QUAN TRỌNG: CHẠY SERVICE DISCOVERY TRÊN LUỒNG RIÊNG
+    // =================================================================
+    // Lý do: Hàm ServiceDiscovery có vòng lặp while(true) để lắng nghe
+    // tin nhắn multicast. Nếu chạy trực tiếp ở đây, code sẽ kẹt mãi mãi
+    // và không bao giờ xuống được dòng server.start().
+
+    std::thread discoveryThread([]() {
+        Server discoveryHost; // Tạo đối tượng Server (lớp chứa hàm Discovery)
+        discoveryHost.ServiceDiscovery(); // Gọi hàm lắng nghe
+        });
+
+    // detach() để luồng này chạy ngầm độc lập, không chặn luồng chính
+    discoveryThread.detach();
+
+    std::cout << "--> Da bat che do Service Discovery (UDP Multicast)..." << std::endl;
+
 
     WebSocketServer server("0.0.0.0", 8080);
+    server.start(); // <-- Hàm này cũng thường sẽ chặn (blocking) tại đây
 
-    server.start();
-
-    // --- Tắt GDI+ MỘT LẦN DUY NHẤT ---
+    // --- Dọn dẹp (Thực tế sẽ ít khi chạy tới đây nếu server.start() loop vô tận) ---
     Gdiplus::GdiplusShutdown(gdiplusToken);
-    // ----------------------------------
     return 0;
 }

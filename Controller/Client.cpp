@@ -29,7 +29,7 @@ std::string Client::ServiceDiscovery() {
 
     // 3. (Quan trọng) Cài đặt thời gian timeout cho việc nhận
     // Nếu không có máy nào phản hồi sau 3 giây, recvfrom sẽ ngừng chờ
-    DWORD timeout = 5000; // 5 seconds
+    DWORD timeout = 10000; // 5 seconds
     setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
 
     // 4. Chuẩn bị địa chỉ Multicast để GỬI tin nhắn
@@ -37,6 +37,10 @@ std::string Client::ServiceDiscovery() {
     multicastAddr.sin_family = AF_INET;
     multicastAddr.sin_port = htons(DISCOVERY_PORT);
     multicastAddr.sin_addr.s_addr = inet_addr(MULTICAST_IP);
+
+    BOOL loop = TRUE;
+    setsockopt(sock, IPPROTO_IP, IP_MULTICAST_LOOP, (char*)&loop, sizeof(loop));
+
 
     // 5. Gửi tin nhắn "phát hiện" đến nhóm multicast
     std::cout << "Controller: Sending a discovery message...\n";

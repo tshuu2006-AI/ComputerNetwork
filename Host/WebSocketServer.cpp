@@ -75,7 +75,7 @@ void WebSocketServer::start() {
         closesocket(server_socket); WSACleanup(); return;
     }
 
-    std::cout << "✅ Server da san sang. Dang lang nghe ket noi..." << std::endl;
+    std::cout << "Server da san sang. Dang lang nghe ket noi..." << std::endl;
 
     while (true) {
         sockaddr_in clientAddr{};

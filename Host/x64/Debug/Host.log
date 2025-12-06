@@ -1,2 +1,10 @@
-﻿  Stream.cpp
+﻿  WebSocketServer.cpp
+D:\PROJECT\C++\Projects\ComputerNetwork\Host\WebSocketServer.cpp(283,62): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+D:\PROJECT\C++\Projects\ComputerNetwork\Host\WebSocketServer.cpp(327,27): warning C4267: '=': conversion from 'size_t' to '_Ty', possible loss of data
+D:\PROJECT\C++\Projects\ComputerNetwork\Host\WebSocketServer.cpp(327,27): warning C4267:         with
+D:\PROJECT\C++\Projects\ComputerNetwork\Host\WebSocketServer.cpp(327,27): warning C4267:         [
+D:\PROJECT\C++\Projects\ComputerNetwork\Host\WebSocketServer.cpp(327,27): warning C4267:             _Ty=unsigned char
+D:\PROJECT\C++\Projects\ComputerNetwork\Host\WebSocketServer.cpp(327,27): warning C4267:         ]
+D:\PROJECT\C++\Projects\ComputerNetwork\Host\WebSocketServer.cpp(343,57): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+D:\PROJECT\C++\Projects\ComputerNetwork\Host\WebSocketServer.cpp(346,82): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
   Host.vcxproj -> D:\PROJECT\C++\Projects\ComputerNetwork\x64\Debug\Host.exe
