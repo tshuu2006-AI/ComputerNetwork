@@ -1,0 +1,18 @@
+﻿D:\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(548,5): warning MSB8028: The intermediate directory (x64\Debug\) contains files shared from another project (Controller.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  SystemControl.cpp
+  WebSocketServer.cpp
+D:\PROJECT\C++\Projects\ComputerNetwork\Server\WebSocketServer.cpp(91,18): warning C4566: character represented by universal-character-name '\u2705' cannot be represented in the current code page (1252)
+D:\PROJECT\C++\Projects\ComputerNetwork\Server\WebSocketServer.cpp(127,30): warning C4566: character represented by universal-character-name '\U0001F517' cannot be represented in the current code page (1252)
+D:\PROJECT\C++\Projects\ComputerNetwork\Server\WebSocketServer.cpp(370,62): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+D:\PROJECT\C++\Projects\ComputerNetwork\Server\WebSocketServer.cpp(417,27): warning C4267: '=': conversion from 'size_t' to '_Ty', possible loss of data
+D:\PROJECT\C++\Projects\ComputerNetwork\Server\WebSocketServer.cpp(417,27): warning C4267:         with
+D:\PROJECT\C++\Projects\ComputerNetwork\Server\WebSocketServer.cpp(417,27): warning C4267:         [
+D:\PROJECT\C++\Projects\ComputerNetwork\Server\WebSocketServer.cpp(417,27): warning C4267:             _Ty=uchar
+D:\PROJECT\C++\Projects\ComputerNetwork\Server\WebSocketServer.cpp(417,27): warning C4267:         ]
+D:\PROJECT\C++\Projects\ComputerNetwork\Server\WebSocketServer.cpp(433,57): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+D:\PROJECT\C++\Projects\ComputerNetwork\Server\WebSocketServer.cpp(436,82): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+  Generating Code...
+x64\Debug\KeyLogger.obj : warning LNK4042: object specified more than once; extras ignored
+  Server.vcxproj -> D:\PROJECT\C++\Projects\ComputerNetwork\x64\Debug\Server.exe
+  'pwsh.exe' is not recognized as an internal or external command,
+  operable program or batch file.

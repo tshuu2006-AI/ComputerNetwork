@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="SystemManager">
+      <UniqueIdentifier>{f18a5f91-cb13-4ab7-b944-06ce5accca05}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Network">
+      <UniqueIdentifier>{0f7f0109-b922-4a9a-8c8b-1f1ff933c766}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Streaming">
+      <UniqueIdentifier>{3130407e-f383-4171-b6d6-d068a9460a1c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="KeyLogging">
+      <UniqueIdentifier>{7c2c4216-8b79-409e-b66b-97ab37ed2b81}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GlobalState.h">
+      <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WebSocketServer.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="AppManager.cpp">
+      <Filter>SystemManager</Filter>
+    </ClCompile>
+    <ClCompile Include="NetworkManager.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="ServiceDiscovery.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="TaskManager.cpp">
+      <Filter>SystemManager</Filter>
+    </ClCompile>
+    <ClCompile Include="DXGICapturer.cpp">
+      <Filter>Streaming</Filter>
+    </ClCompile>
+    <ClCompile Include="Stream.cpp">
+      <Filter>Streaming</Filter>
+    </ClCompile>
+    <ClCompile Include="KeyLogger.h">
+      <Filter>KeyLogging</Filter>
+    </ClCompile>
+    <ClCompile Include="KeyLogger.cpp">
+      <Filter>KeyLogging</Filter>
+    </ClCompile>
+    <ClCompile Include="SystemControl.cpp">
+      <Filter>SystemManager</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Shared\Common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DataInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WebSocketServer.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="AppManager.h">
+      <Filter>SystemManager</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkManager.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="ServiceDiscovery.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="TaskManager.h">
+      <Filter>SystemManager</Filter>
+    </ClInclude>
+    <ClInclude Include="DXGICapturer.h">
+      <Filter>Streaming</Filter>
+    </ClInclude>
+    <ClInclude Include="Stream.h">
+      <Filter>Streaming</Filter>
+    </ClInclude>
+    <ClInclude Include="SystemControl.h">
+      <Filter>SystemManager</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

