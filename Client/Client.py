@@ -6,6 +6,7 @@ import base64
 import socket
 import subprocess
 import platform
+import webbrowser
 import json
 from concurrent.futures import ThreadPoolExecutor
 
@@ -336,6 +337,11 @@ def handle_scan_network():
 def client_disconnect():
     print("[WEB] Client disconnected")
 
+def open_browser():
+    # Mở địa chỉ localhost mà Flask đang chạy
+    webbrowser.open_new("http://127.0.0.1:5000/")
+
+
 # ================= MAIN ENTRY POINT =================
 if __name__ == "__main__":
     # 1. Khởi động luồng lắng nghe UDP Discovery
@@ -346,6 +352,7 @@ if __name__ == "__main__":
     print(f"✅ UDP Discovery listening on port {DISCOVERY_PORT}")
 
     # 2. Khởi động Flask SocketIO Server
+    threading.Timer(3, open_browser).start()
     socketio.run(
         app,
         host="0.0.0.0",
