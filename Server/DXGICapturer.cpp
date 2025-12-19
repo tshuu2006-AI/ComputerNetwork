@@ -43,8 +43,6 @@ bool DXGICapturer::Initialize() {
     m_initialized = true;
     return true;
 }
-
-// Thay đổi: Trả về vector byte thay vì cv::Mat
 // Output: Mảng pixel định dạng BGRA (Blue-Green-Red-Alpha)
 bool DXGICapturer::CaptureFrame(std::vector<uint8_t>& outBuffer, int& outWidth, int& outHeight) {
     if (!m_initialized) {

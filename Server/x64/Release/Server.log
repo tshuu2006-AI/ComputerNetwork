@@ -1,0 +1,6 @@
+﻿  Generating code
+  Previous IPDB and IOBJ mismatch, fall back to full compilation.
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\DXGICapturer.cpp(104): warning C4715: 'DXGICapturer::CaptureFrame': not all control paths return a value
+  All 1514 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  Server.vcxproj -> D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\x64\Release\Server.exe

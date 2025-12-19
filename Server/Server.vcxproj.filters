@@ -50,20 +50,17 @@
     <ClCompile Include="Stream.cpp">
       <Filter>Streaming</Filter>
     </ClCompile>
-    <ClCompile Include="KeyLogger.h">
-      <Filter>KeyLogging</Filter>
-    </ClCompile>
     <ClCompile Include="KeyLogger.cpp">
       <Filter>KeyLogging</Filter>
     </ClCompile>
     <ClCompile Include="SystemControl.cpp">
       <Filter>SystemManager</Filter>
     </ClCompile>
+    <ClCompile Include="InputManager.cpp">
+      <Filter>Streaming</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Shared\Common.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="DataInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -90,6 +87,15 @@
     </ClInclude>
     <ClInclude Include="SystemControl.h">
       <Filter>SystemManager</Filter>
+    </ClInclude>
+    <ClInclude Include="InputManager.h">
+      <Filter>Streaming</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyLogger.h">
+      <Filter>KeyLogging</Filter>
+    </ClInclude>
+    <ClInclude Include="Common.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

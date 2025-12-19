@@ -1,11 +1,10 @@
 ﻿#pragma once
-// Link thư viện
 #pragma once
 #include <vector>
-#include <d3d11.h>        // DirectX 11
-#include <dxgi1_2.h>      // DXGI 1.2
-#include <wrl/client.h>   // Smart Pointer
-#include <gdiplus.h>      // GDI+ để lưu ảnh
+#include <d3d11.h>        /
+#include <dxgi1_2.h>      
+#include <wrl/client.h>   
+#include <gdiplus.h>      
 
 
 #pragma comment(lib, "d3d11.lib")

@@ -15,7 +15,7 @@ int main() {
     WSADATA wsaData;
     int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (result != 0) {
-        std::cerr << "Loi WSAStartup: Khong the khoi tao Winsock. Ma loi: " << result << "\n";
+        std::cerr << "WSAStartup error: Cannot initialize Winsock. Error code : " << result << "\n";
         return 1;
     }
     std::cout << "[MAIN] Winsock initialized successfully.\n";
@@ -29,15 +29,11 @@ int main() {
     std::cout << "[MAIN] NetworkManager threads started.\n";
 
     // 4. VÒNG LẶP CHÍNH (Giữ cho chương trình không bị tắt)
-    // Vòng lặp này giữ cho thread chính (main thread) tồn tại 
-    // trong khi các luồng mạng (serverThread, clientThread) chạy ngầm.
+
     std::cout << "[MAIN] Agent is running. Press CTRL+C to stop.\n";
 
     while (true) {
-        // Nghỉ 1 giây để không lãng phí tài nguyên CPU
         std::this_thread::sleep_for(std::chrono::seconds(1));
-
-        // *Ở đây có thể thêm logic điều khiển hoặc kiểm tra trạng thái chung nếu cần*
     }
 
     // 5. DỌN DẸP (Sẽ không bao giờ được gọi nếu không break vòng lặp while(true))
