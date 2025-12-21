@@ -176,7 +176,7 @@ void WebSocketServer::handle_client(SOCKET client_socket) {
 
 void WebSocketServer::process_command(SOCKET client_socket, const std::string& cmd) {
 
-    // --- PHẦN 1: CAMERA & SCREENSHOT (Giữ nguyên) ---
+    // --- PHẦN 1: CAMERA & SCREENSHOT ---
     if (cmd.find("SCREENSHOT") != std::string::npos) {
         // ... Code Screenshot cũ ...
         std::vector<uchar> jpgData;
@@ -274,7 +274,7 @@ void WebSocketServer::process_command(SOCKET client_socket, const std::string& c
         std::string pidStr = cmd.substr(10); // "TASK_KILL "
         try {
             int pid = std::stoi(pidStr);
-            if (TaskManager::KillProcessByID(pid)) // TaskManager cũ
+            if (TaskManager::KillProcessByID(pid))
                 send_data(client_socket, "Killed Process PID " + pidStr, false);
             else
                 send_data(client_socket, "Error Kill PID " + pidStr, false);
@@ -349,8 +349,7 @@ void WebSocketServer::process_command(SOCKET client_socket, const std::string& c
     }
 
     // 2. Click chuột: "MOUSE_CLICK type state" 
-    // type: 0(Left), 1(Right)
-    // state: 1(Down), 0(Up) -> Client phải gửi event Down riêng và Up riêng để hỗ trợ Drag & Drop
+
     else if (cmd.find("MOUSE_CLICK") == 0) {
         int type, state;
         if (sscanf_s(cmd.c_str(), "MOUSE_CLICK %d %d", &type, &state) == 2) {
@@ -367,8 +366,7 @@ void WebSocketServer::process_command(SOCKET client_socket, const std::string& c
     }
 
     // 4. Bàn phím: "KEY_EVENT vkCode state"
-    // vkCode: Mã phím Windows (Ví dụ: 65 là 'A', 13 là Enter)
-    // state: 1(Down), 0(Up)
+
 
     else if (cmd.find("KEY_EVENT") == 0) {
         int vkCode, state;
@@ -560,7 +558,7 @@ std::string WebSocketServer::calculate_accept_key(const std::string& client_key)
     BCryptFinishHash(hHash, hash.data(), (ULONG)hash.size(), 0);
     BCryptDestroyHash(hHash); BCryptCloseAlgorithmProvider(hAlg, 0);
 
-    // Gọi hàm base64 mới, an toàn (Đã sửa lỗi Handshake)
+    // Gọi hàm base64
     return base64_encode_manual(hash.data(), hash.size());
 }
 

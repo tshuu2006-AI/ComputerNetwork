@@ -1,6 +1,13 @@
-﻿  Generating code
-  Previous IPDB and IOBJ mismatch, fall back to full compilation.
-D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\DXGICapturer.cpp(104): warning C4715: 'DXGICapturer::CaptureFrame': not all control paths return a value
-  All 1514 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+﻿  AppManager.cpp
+  KeyLogger.cpp
+  ServiceDiscovery.cpp
+  SystemControl.cpp
+  TaskManager.cpp
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\TaskManager.cpp(190,16): warning C4311: 'type cast': pointer truncation from 'HINSTANCE' to 'int'
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\TaskManager.cpp(190,16): warning C4302: 'type cast': truncation from 'HINSTANCE' to 'int'
+  Generating code
+  6 of 1864 functions ( 0.3%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    4 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Server.vcxproj -> D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\x64\Release\Server.exe

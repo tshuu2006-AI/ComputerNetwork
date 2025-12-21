@@ -105,7 +105,6 @@ void AppManager::ScanRegistry(HKEY hRoot, const wchar_t* subKey, std::map<std::s
             DWORD sIcon = sizeof(wIcon);
 
             RegQueryValueExW(hSub, L"DisplayName", NULL, NULL, (LPBYTE)wName, &sName);
-            // Một số app không có DisplayIcon, ta có thể thử tìm trong UninstallString, nhưng tạm thời dùng Icon
             RegQueryValueExW(hSub, L"DisplayIcon", NULL, NULL, (LPBYTE)wIcon, &sIcon);
 
             if (wcslen(wName) > 0 && wcslen(wIcon) > 0) {

@@ -21,7 +21,7 @@ bool SystemControl::GrantShutdownPrivilege() {
     // Áp dụng quyền
     AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, (PTOKEN_PRIVILEGES)NULL, 0);
 
-    // Kiểm tra xem có lỗi không (ngay cả khi hàm trả về TRUE, GetLastError có thể báo ERROR_NOT_ALL_ASSIGNED)
+    // Kiểm tra xem có lỗi không
     bool success = (GetLastError() == ERROR_SUCCESS);
     CloseHandle(hToken);
     return success;
@@ -31,8 +31,6 @@ bool SystemControl::GrantShutdownPrivilege() {
 bool SystemControl::Shutdown() {
     if (!GrantShutdownPrivilege()) return false;
 
-    // EWX_SHUTDOWN: Tắt nguồn
-    // EWX_FORCE: Ép buộc đóng ứng dụng đang treo
     return ExitWindowsEx(EWX_SHUTDOWN | EWX_FORCE,
         SHTDN_REASON_MAJOR_OTHER | SHTDN_REASON_MINOR_OTHER | SHTDN_REASON_FLAG_PLANNED);
 }

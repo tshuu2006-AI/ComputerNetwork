@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <psapi.h>
 #include <vector>
 #include <iomanip> // Cần cho std::hex trong EscapeJson
 
@@ -103,19 +104,14 @@ std::string TaskManager::GetAppList() {
 // ==========================================
 // LOGIC LIST PROCESSES -> TRẢ VỀ JSON
 // ==========================================
-
 std::string TaskManager::GetProcessList() {
     std::stringstream ss;
-    ss << "["; // Mở mảng JSON
+    ss << "[";
 
-    HANDLE hProcessSnap;
+    HANDLE hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hProcessSnap == INVALID_HANDLE_VALUE) return "[]";
+
     PROCESSENTRY32 pe32;
-
-    hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (hProcessSnap == INVALID_HANDLE_VALUE) {
-        return "[]"; // Trả về mảng rỗng nếu lỗi
-    }
-
     pe32.dwSize = sizeof(PROCESSENTRY32);
 
     if (!Process32First(hProcessSnap, &pe32)) {
@@ -128,24 +124,32 @@ std::string TaskManager::GetProcessList() {
         if (!first) ss << ",";
         first = false;
 
-        std::wstring ws(pe32.szExeFile);
-        std::string strName = wstring_to_utf8(ws);
+        // Lấy thông tin bộ nhớ (RAM)
+        unsigned long long memUsage = 0;
+        HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pe32.th32ProcessID);
+        if (hProcess) {
+            PROCESS_MEMORY_COUNTERS pmc;
+            if (GetProcessMemoryInfo(hProcess, &pmc, sizeof(pmc))) {
+                memUsage = pmc.WorkingSetSize / 1024; // Đổi sang KB
+            }
+            CloseHandle(hProcess);
+        }
 
-        // Format: {"pid": 123, "name": "notepad.exe", "mem": "N/A"}
-        // Thêm trường "mem" nếu muốn hiển thị thêm cột, hiện tại để tạm chuỗi trống hoặc số 0
+        std::string strName = wstring_to_utf8(pe32.szExeFile);
         ss << "{\"pid\": " << pe32.th32ProcessID
             << ", \"name\": \"" << EscapeJson(strName) << "\""
+            << ", \"mem\": \"" << memUsage << " KB\""
             << "}";
 
     } while (Process32Next(hProcessSnap, &pe32));
 
     CloseHandle(hProcessSnap);
-    ss << "]"; // Đóng mảng JSON
+    ss << "]";
     return ss.str();
 }
 
 // ==========================================
-// LOGIC KILL & START (GIỮ NGUYÊN)
+// LOGIC KILL & START
 // ==========================================
 
 bool TaskManager::KillProcessByID(int pid) {
@@ -160,7 +164,29 @@ bool TaskManager::KillProcessByID(int pid) {
 }
 
 bool TaskManager::StartProcessByName(const std::string& name) {
-    std::wstring wName = utf8_to_wstring(name);
-    HINSTANCE hRes = ShellExecuteW(NULL, L"open", wName.c_str(), NULL, NULL, SW_SHOW);
-    return (int)hRes > 32;
+    std::wstring wPath = utf8_to_wstring(name);
+
+    // Tách thư mục làm việc từ đường dẫn file
+
+    std::wstring directory = L"";
+    size_t last_slash = wPath.find_last_of(L"\\/");
+    if (std::string::npos != last_slash) {
+        directory = wPath.substr(0, last_slash);
+    }
+
+    // Sử dụng ShellExecuteEx để có kiểm soát tốt hơn
+    SHELLEXECUTEINFOW sei = { sizeof(sei) };
+    sei.fMask = SEE_MASK_NOCLOSEPROCESS;
+    sei.lpVerb = L"open"; 
+    sei.lpFile = wPath.c_str();
+    sei.lpDirectory = directory.empty() ? NULL : directory.c_str();
+    sei.nShow = SW_SHOWNORMAL;
+
+    if (ShellExecuteExW(&sei)) {
+        return true;
+    }
+    else {
+        HINSTANCE hRes = ShellExecuteW(NULL, L"open", wPath.c_str(), NULL, NULL, SW_SHOW);
+        return (int)hRes > 32;
+    }
 }

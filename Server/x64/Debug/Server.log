@@ -1,3 +1,41 @@
-﻿  ServiceDiscovery.cpp
-  LINK : D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\x64\Debug\Server.exe not found or not built by the last incremental link; performing full link
+﻿  AppManager.cpp
+  InputManager.cpp
+  KeyLogger.cpp
+  ServiceDiscovery.cpp
+  DXGICapturer.cpp
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\DXGICapturer.h(4,10): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+  (compiling source file 'DXGICapturer.cpp')
+  
+  GlobalState.h
+  main.cpp
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\DXGICapturer.h(4,10): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+  (compiling source file 'main.cpp')
+  
+  Stream.cpp
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\DXGICapturer.h(4,10): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+  (compiling source file 'Stream.cpp')
+  
+  SystemControl.cpp
+  TaskManager.cpp
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\TaskManager.cpp(190,16): warning C4311: 'type cast': pointer truncation from 'HINSTANCE' to 'int'
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\TaskManager.cpp(190,16): warning C4302: 'type cast': truncation from 'HINSTANCE' to 'int'
+  NetworkManager.cpp
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\DXGICapturer.h(4,10): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+  (compiling source file 'NetworkManager.cpp')
+  
+  WebSocketServer.cpp
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\DXGICapturer.h(4,10): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+  (compiling source file 'WebSocketServer.cpp')
+  
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\WebSocketServer.cpp(126,30): warning C4566: character represented by universal-character-name '\U0001F517' cannot be represented in the current code page (1252)
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\WebSocketServer.cpp(477,62): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\WebSocketServer.cpp(524,27): warning C4267: '=': conversion from 'size_t' to '_Ty', possible loss of data
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\WebSocketServer.cpp(524,27): warning C4267:         with
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\WebSocketServer.cpp(524,27): warning C4267:         [
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\WebSocketServer.cpp(524,27): warning C4267:             _Ty=uchar
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\WebSocketServer.cpp(524,27): warning C4267:         ]
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\WebSocketServer.cpp(540,57): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\WebSocketServer.cpp(543,82): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+  Generating Code...
+D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\Server\DXGICapturer.cpp(104,1): warning C4715: 'DXGICapturer::CaptureFrame': not all control paths return a value
   Server.vcxproj -> D:\PROJECT\C++\Projects\ComputerNetwork\ComputerNetwork\x64\Debug\Server.exe

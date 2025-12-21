@@ -9,7 +9,7 @@ void InputManager::MoveMouse(int x, int y) {
     int screenW, screenH;
     GetScreenResolution(screenW, screenH);
 
-    // Tỉ lệ nén ảnh mà bạn đang dùng trong Stream.cpp là 0.6
+    // Tỉ lệ nén ảnh mà bạn đang dùng
     float compressScale = 0.6f;
 
     // Phóng đại tọa độ nhận được về kích thước thực tế của màn hình

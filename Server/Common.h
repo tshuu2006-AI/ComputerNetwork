@@ -2,7 +2,7 @@
 #pragma once
 #include <string>
 
-// Địa chỉ IP Multicast (chọn một địa chỉ trong dải 224.x.x.x đến 239.x.x.x)
+// Địa chỉ IP Multicast
 #define MULTICAST_IP "239.0.0.1" 
 
 // Port dùng để khám phá
