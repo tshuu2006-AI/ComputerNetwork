@@ -58,7 +58,7 @@ Nếu bạn muốn build lại mã nguồn từ đầu:
 
 ### 1. Chuẩn bị
 * Môi trường Windows 10/11.
-* Visual Studio 2019/2022 (C++ Desktop Development).
+* Visual Studio 2019/2022/2026 (C++ Desktop Development).
 * Python 3.12 và pip.
 
 ### 2. Cấu hình thư viện
