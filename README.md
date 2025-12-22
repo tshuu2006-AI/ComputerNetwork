@@ -20,13 +20,13 @@ Dự án này là một công cụ quản trị máy tính từ xa toàn diện,
 * **Power Control:** Thực thi các lệnh tắt máy (Shutdown), khởi động lại (Restart) và khóa máy (Lock) sau khi thực hiện nâng quyền `SE_SHUTDOWN_NAME`.
 
 ### 3. Giám sát & Mạng
-* [cite_start]**Keylogger:** Ghi lại mọi sự kiện phím gõ theo thời gian thực bằng kỹ thuật **Low-level Windows Hooks** (`WH_KEYBOARD_LL`).
-* [cite_start]**Service Discovery:** Tự động phát hiện thiết bị trong mạng LAN qua giao thức UDP Broadcast (cổng 9999).
+* **Keylogger:** Ghi lại mọi sự kiện phím gõ theo thời gian thực bằng kỹ thuật **Low-level Windows Hooks** (`WH_KEYBOARD_LL`).
+* **Service Discovery:** Tự động phát hiện thiết bị trong mạng LAN qua giao thức UDP Broadcast (cổng 9999).
 
 ---
 
 ## 🏗 Kiến trúc hệ thống
-[cite_start]Hệ thống vận hành dựa trên hai luồng dữ liệu chính (Screen Stream và Control Stream) chạy song song:
+Hệ thống vận hành dựa trên hai luồng dữ liệu chính (Screen Stream và Control Stream) chạy song song:
 
 | Lớp | Thành phần | Vai trò chính |
 | :--- | :--- | :--- |
