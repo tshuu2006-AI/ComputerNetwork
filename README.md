@@ -67,3 +67,23 @@ Nếu bạn muốn build lại mã nguồn từ đầu:
 3. Trong thư mục `Client`, chạy lệnh:
    ```bash
    pip install -r requirements.txt
+
+
+- **User Stories**  
+  <a href="https://www.notion.so/328714709b37809f9e0bcb3a455f734f?v=328714709b37809fa1c7000c17ee3536&source=copy_link" target="_blank">
+    View User Stories
+  </a>
+
+- **WBS (Work Breakdown Structure)**  
+  <a href="https://www.notion.so/328714709b378020a948dcf6db37efd1?v=328714709b3780c5a3d4000cace4e2f2&source=copy_link" target="_blank">
+    View WBS
+  </a>
+
+- **Kanban Board**  
+  <a href="https://www.notion.so/Kanban-Task-Board-ad0714709b378357bd41018c8777981a?source=copy_link" target="_blank">
+    View Kanban Board
+  </a>
+
+- **Task Tracking**  
+  <a href="https://www.notion.so/328714709b3780af83d9cbfee79d1905?v=328714709b37801a83de000cd2c6eff6&source=copy_link" target="_blank">
+    View Task Tracking
